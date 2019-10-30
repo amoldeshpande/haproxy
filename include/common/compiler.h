@@ -27,7 +27,7 @@
  * Gcc before 3.0 needs [0] to declare a variable-size array
  */
 #ifndef VAR_ARRAY
-#if  __GNUC__  < 3
+#if  (__GNUC__  < 3 ) && !(_MSC_VER) //clang-cl shows as MSC
 #define VAR_ARRAY	0
 #else
 #define VAR_ARRAY
@@ -151,5 +151,10 @@
 #endif
 #endif
 
+#ifdef WINDOWS //LLP64
+#define ULP_APPROPRIATE(a) a##ULL
+#else //LP64
+#define ULP_APPROPRIATE(a) a##UL
+#endif
 
 #endif /* _COMMON_COMPILER_H */

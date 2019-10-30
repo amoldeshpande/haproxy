@@ -56,6 +56,8 @@
 #   USE_SYSTEMD          : enable sd_notify() support.
 #   USE_OBSOLETE_LINKER  : use when the linker fails to emit __start_init/__stop_init
 #   USE_THREAD_DUMP      : use the more advanced thread state dump system. Automatic.
+#   USE_WINDOWS_NATIVE   : enable Windows native I/O API 
+#   USE WINSOCK_RIO      : use Registered I/O, USE_WINDOWS_NATIVE must be defined
 #
 # Options can be forced by specifying "USE_xxx=1" or can be disabled by using
 # "USE_xxx=" (empty string). The list of enabled and disabled options for a
@@ -273,12 +275,19 @@ ARCH_FLAGS        = $(ARCH_FLAGS.$(ARCH))
 # and debug flags. They may be overridden by some distributions which prefer to
 # set all of them at once instead of playing with the CPU and DEBUG variables.
 CFLAGS = $(ARCH_FLAGS) $(CPU_CFLAGS) $(DEBUG_CFLAGS) $(SPEC_CFLAGS)
+ifeq ($(OS),Windows_NT)
+include Makefile.Windows
+else
+LDFLAGS=
+endif
+
+TARGET_EXECUTABLE =  haproxy
 
 #### Common LDFLAGS
 # These LDFLAGS are used as the first "ld" options, regardless of any library
 # path or any other option. They may be changed to add any linker-specific
 # option at the beginning of the ld command line.
-LDFLAGS = $(ARCH_FLAGS) -g
+LDFLAGS += $(ARCH_FLAGS) -g
 
 #### list of all "USE_*" options. These ones must be updated if new options are
 # added, so that the relevant options are properly added to the CFLAGS and to
@@ -291,7 +300,8 @@ use_opts = USE_EPOLL USE_KQUEUE USE_MY_EPOLL USE_MY_SPLICE USE_NETFILTER      \
            USE_GETADDRINFO USE_OPENSSL USE_LUA USE_FUTEX USE_ACCEPT4          \
            USE_MY_ACCEPT4 USE_ZLIB USE_SLZ USE_CPU_AFFINITY USE_TFO USE_NS    \
            USE_DL USE_RT USE_DEVICEATLAS USE_51DEGREES USE_WURFL USE_SYSTEMD  \
-           USE_OBSOLETE_LINKER USE_PRCTL USE_THREAD_DUMP USE_EVPORTS
+           USE_OBSOLETE_LINKER USE_PRCTL USE_THREAD_DUMP USE_EVPORTS           \
+		   USE_WINDOWS_NATIVE USE_WINSOCK_RIO 
 
 #### Target system options
 # Depending on the target platform, some options are set, as well as some
@@ -396,6 +406,14 @@ ifeq ($(TARGET),cygwin)
   TARGET_CFLAGS  = $(if $(filter 1.5.%, $(shell uname -r)), -DUSE_IPV6 -DAF_INET6=23 -DINET6_ADDRSTRLEN=46, )
 endif
 
+# Windows native
+ifeq ($(TARGET),windows-native)
+  set_target_defaults = $(call default_opts, \
+	  USE_WINDOWS_NATIVE USE_WINSOCK_RIO USE_OBSOLETE_LINKER USE_POLL USE_OPENSSL USE_PCRE2)
+  TARGET_EXECUTABLE = haproxy.exe
+  LINKER_OUTPUT=-out:
+  LD=lld-link
+endif
 # set the default settings according to the target above
 $(set_target_defaults)
 
@@ -718,6 +736,13 @@ ifneq ($(USE_NS),)
 OPTIONS_OBJS  += src/namespace.o
 endif
 
+ifeq ($(OS),Windows_NT)
+EXTRA_OBJS += $(WIN_CPP_LIB)
+OPTIONS_OBJS += src/Windows/mmap.o src/Windows/fork.o  src/Windows/env.o src/Windows/time.o src/Windows/resource.o \
+				src/Windows/stubs.o src/Windows/dirent.o src/Windows/scandir.o src/windows/winsock.o \
+				src/Windows/win_init.o
+endif
+
 #### Global link options
 # These options are added at the end of the "ld" command line. Use LDFLAGS to
 # add options at the beginning of the "ld" command line if needed.
@@ -745,7 +770,7 @@ all:
 	@echo "Please choose the target among the following supported list :"
 	@echo
 	@echo "   linux-glibc, linux-glibc-legacy, solaris, freebsd, openbsd, netbsd,"
-	@echo "   cygwin, haiku, aix51, aix52, osx, generic, custom"
+	@echo "   cygwin, haiku, aix51, aix52, osx, windows-native, generic, custom"
 	@echo
 	@echo "Use \"generic\" if you don't want any optimization, \"custom\" if you"
 	@echo "want to precisely tweak every option, or choose the target which"
@@ -763,7 +788,7 @@ all:
 	@echo
 	@exit 1
 else
-all: haproxy $(EXTRA)
+all: $(TARGET_EXECUTABLE) $(EXTRA)
 endif
 endif
 
@@ -833,8 +858,9 @@ help:
 build_opts = $(shell rm -f .build_opts.new; echo \'$(TARGET) $(BUILD_OPTIONS) $(VERBOSE_CFLAGS)\' > .build_opts.new; if cmp -s .build_opts .build_opts.new; then rm -f .build_opts.new; else mv -f .build_opts.new .build_opts; fi)
 .build_opts: $(build_opts)
 
-haproxy: $(OPTIONS_OBJS) $(OBJS) $(EBTREE_OBJS)
-	$(cmd_LD) $(LDFLAGS) -o $@ $^ $(LDOPTS)
+$(TARGET_EXECUTABLE): $(OPTIONS_OBJS) $(OBJS) $(EBTREE_OBJS)
+	$(cmd_LD) $(LDFLAGS)  -o $(LINKER_OUTPUT)$@ $^ $(LDOPTS)
+
 
 $(LIB_EBTREE): $(EBTREE_OBJS)
 	$(cmd_AR) rv $@ $^
@@ -876,14 +902,14 @@ install-doc:
 	done
 
 install-bin:
-	$(Q)for i in haproxy $(EXTRA); do \
+	$(Q)for i in $(TARGET_EXECUTABLE) $(EXTRA); do \
 		if ! [ -e "$$i" ]; then \
 			echo "Please run 'make' before 'make install'."; \
 			exit 1; \
 		fi; \
 	done
 	$(Q)install -v -d "$(DESTDIR)$(SBINDIR)"
-	$(Q)install -v haproxy $(EXTRA) "$(DESTDIR)$(SBINDIR)"
+	$(Q)install -v $(TARGET_EXECUTABLE) $(EXTRA) "$(DESTDIR)$(SBINDIR)"
 
 install: install-bin install-man install-doc
 
@@ -895,8 +921,8 @@ uninstall:
 	$(Q)-rmdir "$(DESTDIR)$(DOCDIR)"
 	$(Q)rm -f "$(DESTDIR)$(SBINDIR)"/haproxy
 
-clean:
-	$(Q)rm -f *.[oas] src/*.[oas] ebtree/*.[oas] haproxy test .build_opts .build_opts.new
+clean: $(WINCLEAN)
+	$(Q)rm -f *.[oas] src/*.[oas] ebtree/*.[oas] $(TARGET_EXECUTABLE) test .build_opts .build_opts.new
 	$(Q)for dir in . src include/* doc ebtree; do rm -f $$dir/*~ $$dir/*.rej $$dir/core; done
 	$(Q)rm -f haproxy-$(VERSION).tar.gz haproxy-$(VERSION)$(SUBVERS).tar.gz
 	$(Q)rm -f haproxy-$(VERSION) haproxy-$(VERSION)$(SUBVERS) nohup.out gmon.out

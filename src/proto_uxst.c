@@ -1,3 +1,4 @@
+#ifndef WINDOWS
 /*
  * UNIX SOCK_STREAM protocol layer (uxst)
  *
@@ -737,3 +738,4 @@ INITCALL1(STG_REGISTER, bind_register_keywords, &bind_kws);
  *  c-basic-offset: 8
  * End:
  */
+#endif // WINDOWS

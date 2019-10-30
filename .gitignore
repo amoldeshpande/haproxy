@@ -7,6 +7,8 @@
 !/LICENSE
 !/BRANCHES
 !/Makefile
+!/Makefile.Windows
+!/CppProperties.json
 !/README
 !/INSTALL
 !/CONTRIBUTING

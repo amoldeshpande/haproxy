@@ -434,7 +434,7 @@ static inline int eb_gettag(eb_troot_t *troot)
  */
 static inline struct eb_root *eb_clrtag(const eb_troot_t *troot)
 {
-	return (struct eb_root *)((unsigned long)troot & ~1UL);
+	return (struct eb_root *)((size_t)troot & ~(ULP_APPROPRIATE(1)) );
 }
 
 /* Returns a pointer to the eb_node holding <root> */

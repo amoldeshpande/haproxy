@@ -293,7 +293,6 @@ static const char *fetch_ckp_names[SMP_CKP_ENTRIES] = {
  * It assumes that the <expr> and all of its converters are properly
  * initialized.
  */
-inline
 int smp_expr_output_type(struct sample_expr *expr)
 {
 	struct sample_conv_expr *smp_expr;

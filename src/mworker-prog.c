@@ -239,6 +239,7 @@ int cfg_parse_program(const char *file, int linenum, char **args, int kwm)
 			err_code |= ERR_ALERT | ERR_FATAL;
 			goto error;
 		}
+#ifndef WINDOWS
 	} else if (!strcmp(args[0], "user")) {
 		struct passwd *ext_child_user;
 		if (*(args[1]) == '\0') {
@@ -289,6 +290,7 @@ int cfg_parse_program(const char *file, int linenum, char **args, int kwm)
 			ha_alert("parsing [%s:%d] : cannot find group id for '%s' (%d:%s)\n", file, linenum, args[1], errno, strerror(errno));
 			err_code |= ERR_ALERT | ERR_FATAL;
 		}
+#endif // WINDOWS
 	} else {
 		ha_alert("parsing [%s:%d] : unknown keyword '%s' in '%s' section\n", file, linenum, args[0], "program");
 		err_code |= ERR_ALERT | ERR_FATAL;

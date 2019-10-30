@@ -25,6 +25,7 @@
 #include <sys/types.h>
 
 #include <net/if.h>
+#include <inttypes.h>
 
 #include <common/cfgparse.h>
 #include <common/compat.h>
@@ -70,6 +71,12 @@
 #include <proto/stream_interface.h>
 #include <proto/task.h>
 #include <proto/proto_udp.h>
+
+#ifdef WINDOWS
+// %d for a 32-bit long causes warnings in clang, but there is no portable way to print that. So turn the format warning off 
+// just for this file.
+#pragma clang diagnostic ignored "-Wformat"
+#endif
 
 #define PAYLOAD_PATTERN "<<"
 
@@ -1564,6 +1571,7 @@ static int bind_parse_severity_output(char **args, int cur_arg, struct proxy *px
 /* Send all the bound sockets, always returns 1 */
 static int _getsocks(char **args, char *payload, struct appctx *appctx, void *private)
 {
+#ifndef WINDOWS
 	char *cmsgbuf = NULL;
 	unsigned char *tmpbuf = NULL;
 	struct cmsghdr *cmsg;
@@ -1745,6 +1753,9 @@ out:
 	free(cmsgbuf);
 	free(tmpbuf);
 	return 1;
+#else
+    return -1;
+#endif //WINDOWS
 }
 
 static int cli_parse_simple(char **args, char *payload, struct appctx *appctx, void *private)
@@ -2585,6 +2596,7 @@ err:
  */
 int mworker_cli_sockpair_new(struct mworker_proc *mworker_proc, int proc)
 {
+#ifndef WINDOWS
 	struct bind_conf *bind_conf;
 	struct listener *l;
 	char *path = NULL;
@@ -2644,6 +2656,7 @@ error:
 	close(mworker_proc->ipc_fd[1]);
 	free(err);
 
+#endif //WINDOWS
 	return -1;
 }
 

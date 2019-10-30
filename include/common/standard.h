@@ -113,7 +113,12 @@ extern char *ultoa_r(unsigned long n, char *buffer, int size);
 extern char *lltoa_r(long long int n, char *buffer, int size);
 extern char *sltoa_r(long n, char *buffer, int size);
 extern const char *ulltoh_r(unsigned long long n, char *buffer, int size);
+#ifndef WINDOWS
 static inline const char *ultoa(unsigned long n)
+#else
+#define ultoa ultoa_win
+static inline const char *ultoa_win(unsigned long n)
+#endif
 {
 	return ultoa_r(n, itoa_str[0], sizeof(itoa_str[0]));
 }
@@ -1356,7 +1361,7 @@ static inline int fix_pointer_if_wrap(const char **chunks, const char **ptr)
  */
 static inline void *caddr_to_ptr(unsigned long caddr)
 {
-	return (void *)(caddr & ~3UL);
+	return (void *)(caddr & ~ULP_APPROPRIATE(3));
 }
 
 /* Only retrieves the two lower bits of a composite address. This is used to mix

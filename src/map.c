@@ -704,8 +704,8 @@ static int cli_parse_set_map(char **args, char *payload, struct appctx *appctx, 
 				return cli_err(appctx, "Malformed identifier. Please use #<id> or <file>.\n");
 
 			/* Convert and check integer to pointer. */
-			ref = (struct pat_ref_elt *)(long)conv;
-			if ((long long int)(long)ref != conv)
+			ref = (struct pat_ref_elt *)(long long)conv;
+			if ((long long int)(long long)ref != conv)
 				return cli_err(appctx, "Malformed identifier. Please use #<id> or <file>.\n");
 
 			/* Try to modify the entry. */
@@ -894,8 +894,8 @@ static int cli_parse_del_map(char **args, char *payload, struct appctx *appctx, 
 			return cli_err(appctx, "Malformed identifier. Please use #<id> or <file>.\n");
 
 		/* Convert and check integer to pointer. */
-		ref = (struct pat_ref_elt *)(long)conv;
-		if ((long long int)(long)ref != conv)
+		ref = (struct pat_ref_elt *)(long long)conv;
+		if ((long long int)(long long)ref != conv)
 			return cli_err(appctx, "Malformed identifier. Please use #<id> or <file>.\n");
 
 		/* Try to delete the entry. */

@@ -1,3 +1,4 @@
+#ifndef WINDOWS
 /*
  * Asynchronous signal delivery functions.
  *
@@ -273,3 +274,4 @@ void signal_unregister(int sig)
 }
 
 INITCALL0(STG_PREPARE, signal_init);
+#endif

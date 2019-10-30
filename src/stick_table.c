@@ -3403,7 +3403,7 @@ static int table_process_entry_per_key(struct appctx *appctx, char **args)
 	case SMP_T_SINT:
 		{
 			char *endptr;
-			unsigned long val;
+			unsigned long long val;
 			errno = 0;
 			val = strtoul(args[4], &endptr, 10);
 			if ((errno == ERANGE && val == ULONG_MAX) ||

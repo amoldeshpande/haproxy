@@ -65,4 +65,12 @@
  */
 //#undef  CONFIG_HAP_INLINE_FD_SET
 
+
+#define PATH_SEP_CHAR '/'
+
+#if WINDOWS
+#undef PATH_SEP_CHAR
+#define PATH_SEP_CHAR '\\'
+#endif
+
 #endif /* _COMMON_CONFIG_H */

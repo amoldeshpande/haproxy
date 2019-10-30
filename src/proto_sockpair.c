@@ -1,3 +1,4 @@
+#ifndef WINDOWS
 /*
  * Socket Pair protocol layer (sockpair)
  *
@@ -399,3 +400,4 @@ int recv_fd_uxst(int sock)
  *  c-basic-offset: 8
  * End:
  */
+#endif // WINDOWS

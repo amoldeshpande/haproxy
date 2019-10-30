@@ -4154,7 +4154,7 @@ void dump_hex(struct buffer *out, const char *pfx, const void *buf, int len, int
 	const unsigned char *d = buf;
 	int i, j, start;
 
-	d = (const unsigned char *)(((unsigned long)buf) & -16);
+	d = (const unsigned char *)(((unsigned long long)buf) & -16);
 	start = ((unsigned long)buf) & 15;
 
 	for (i = 0; i < start + len; i += 16) {

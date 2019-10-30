@@ -1086,6 +1086,7 @@ next_dir_entry:
 	free(err);
 }
 
+#ifndef WINDOWS
 static int get_old_sockets(const char *unixsocket)
 {
 	char *cmsgbuf = NULL, *tmpbuf = NULL;
@@ -1296,6 +1297,7 @@ out:
 	}
 	return (ret2);
 }
+#endif
 
 /*
  * copy and cleanup the current argv
@@ -1524,7 +1526,7 @@ static void init(int argc, char **argv)
 
 	pid = getpid();
 	progname = *argv;
-	while ((tmp = strchr(progname, '/')) != NULL)
+	while ((tmp = strchr(progname, PATH_SEP_CHAR)) != NULL)
 		progname = tmp + 1;
 
 	/* the process name is used for the logs only */
@@ -2778,6 +2780,9 @@ int main(int argc, char **argv)
 	struct rlimit limit;
 	char errmsg[100];
 	int pidfd = -1;
+#ifdef WINDOWS
+    win_init();
+#endif
 
 	setvbuf(stdout, NULL, _IONBF, 0);
 

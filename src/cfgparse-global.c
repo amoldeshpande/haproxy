@@ -473,6 +473,7 @@ int cfg_parse_global(const char *file, int linenum, char **args, int kwm)
 			goto out;
 		global.external_check = 1;
 	}
+#ifndef WINDOWS
 	/* user/group name handling */
 	else if (!strcmp(args[0], "user")) {
 		struct passwd *ha_user;
@@ -513,6 +514,7 @@ int cfg_parse_global(const char *file, int linenum, char **args, int kwm)
 		}
 	}
 	/* end of user/group name handling*/
+#endif //WINDOWS
 	else if (!strcmp(args[0], "nbproc")) {
 		if (alertif_too_many_args(1, file, linenum, args, &err_code))
 			goto out;
@@ -777,6 +779,7 @@ int cfg_parse_global(const char *file, int linenum, char **args, int kwm)
 		}
 		global.pidfile = strdup(args[1]);
 	}
+#ifndef WINDOWS
 	else if (!strcmp(args[0], "unix-bind")) {
 		int cur_arg = 1;
 		while (*(args[cur_arg])) {
@@ -857,6 +860,7 @@ int cfg_parse_global(const char *file, int linenum, char **args, int kwm)
 			goto out;
                 }
 	}
+#endif //WINDOWS
 	else if (!strcmp(args[0], "log")) { /* "no log" or "log ..." */
 		if (!parse_logsrv(args, &global.logsrvs, (kwm == KWM_NO), &errmsg)) {
 			ha_alert("parsing [%s:%d] : %s : %s\n", file, linenum, args[0], errmsg);
